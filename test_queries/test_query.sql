@@ -1,8 +1,3 @@
- SELECT properties.*, avg(property_reviews.rating) as average_rating
-  FROM properties
-  JOIN property_reviews ON properties.id = property_id
-  WHERE city LIKE '%Vancouver%' AND cost_per_night >= 500
-  GROUP BY properties.id
-  HAVING avg(property_reviews.rating) >= 3
-  ORDER BY cost_per_night
-  LIMIT 4;
+INSERT INTO properties (
+      owner_id, title, thumbnail_photo_url, cover_photo_url, cost_per_night, parking_spaces, number_of_bathrooms, number_of_bedrooms, country, street, city, province, post_code, active) 
+      VALUES (782, 'Test property', 'https://images.pexels.com/photos/533416/pexels-photo-533416.jpeg?auto=compress&cs=tinysrgb&h=350', 'https://images.pexels.com/photos/533416/pexels-photo-533416.jpeg', 1000, 3, 4, 4, 'Canada', '123 Yonge st.', 'Toronto', 'Ontario', '80960', TRUE);

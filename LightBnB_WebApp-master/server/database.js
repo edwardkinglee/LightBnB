@@ -1,4 +1,7 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable camelcase */
 const properties = require('./json/properties.json');
+// eslint-disable-next-line no-unused-vars
 const users = require('./json/users.json');
 const { Pool } = require('pg');
 
@@ -17,17 +20,7 @@ const pool = new Pool({
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  // let user;
-  // for (const userId in users) {
-  //   user = users[userId];
-  //   if (user.email.toLowerCase() === email.toLowerCase()) {
-  //     break;
-  //   } else {
-  //     user = null;
-  //   }
-  // }
-  // console.log('user', user);
-  // return Promise.resolve(user);
+ 
   return pool
     .query(`SELECT * 
           FROM users 
@@ -79,11 +72,7 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser =  function(user) {
-  // const userId = Object.keys(users).length + 1;
-  // user.id = userId;
-  // users[userId] = user;
-  // console.log('user', user);
-  // return Promise.resolve(user);
+ 
   return pool
     .query(`INSERT INTO users (
       name, email, password) 
@@ -220,9 +209,17 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  
+  return pool
+    .query(`INSERT INTO properties (
+      owner_id, title, thumbnail_photo_url, cover_photo_url, cost_per_night, parking_spaces, number_of_bathrooms, number_of_bedrooms, country, street, city, province, post_code, active) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, true)
+      RETURNING *`, [property.owner_id, property.title, property.thumbnail_photo_url, property.cover_photo_url, property.cost_per_night, property.parking_spaces, property.number_of_bathrooms, property.number_of_bedrooms, property.country, property.street, property.city, property.province, property.post_code])
+    .then(() => {
+      
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 exports.addProperty = addProperty;
