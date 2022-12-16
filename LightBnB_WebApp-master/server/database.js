@@ -139,15 +139,77 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
-  return pool
-    .query(`SELECT * FROM properties LIMIT $1`, [limit])
-    .then((result) => {
-      // console.log(result.rows);
-      return result.rows;
-    })
-    .catch((err) => {
-      console.log(err.message);
-    });
+  const queryParams = [];
+  const city = options.city;
+  const minPrice = options. minimum_price_per_night;
+  const maxPrice = options.maximum_price_per_night;
+  const minRating =  Number(options.minimum_rating);
+  const newObj = {};
+  //create new object with only values that are not ''
+  for (const value in options) {
+    if (options[value]) {
+      newObj[value] = options[value];
+    }
+  }
+
+  let queryString = `
+  SELECT properties.*, avg(property_reviews.rating) as average_rating
+  FROM properties
+  JOIN property_reviews ON properties.id = property_id
+  `;
+  //add 'WHERE' only if these values are not ''
+  if (city || minPrice || maxPrice) {
+    queryString += `WHERE`;
+  }
+  //loop to add 'AND' only if there is more then 0 parameter
+  for (const value in newObj) {
+    if (queryParams.length > 0 && value !== 'minimum_rating') {
+      queryString += `AND`;
+    }
+
+    if (value === 'city') {
+      queryParams.push(`%${city}%`);
+      queryString += ` city LIKE $${queryParams.length} `;
+    }
+
+    if (value === 'minimum_price_per_night') {
+      queryParams.push((minPrice * 100));
+      queryString += ` cost_per_night >= $${queryParams.length} `;
+    }
+
+    if (value === 'maximum_price_per_night') {
+      queryParams.push((maxPrice * 100));
+      queryString += ` cost_per_night <= $${queryParams.length} `;
+    }
+  }
+
+  //only add Having query if minimum_rating exists
+  if (newObj['minimum_rating']) {
+    
+    queryParams.push(minRating);
+    queryString += `GROUP BY properties.id 
+    HAVING avg(property_reviews.rating) >= $${queryParams.length} `;
+    
+    queryParams.push(limit);
+    queryString += `
+  ORDER BY cost_per_night
+  LIMIT $${queryParams.length};
+  `;
+  }
+  //if minimum_rating doesn't exist
+  if (!newObj['minimum_rating']) {
+    queryParams.push(limit);
+    queryString += `
+  GROUP BY properties.id
+  ORDER BY cost_per_night
+  LIMIT $${queryParams.length};
+  `;
+  }
+  
+  console.log(queryString, queryParams);
+
+  
+  return pool.query(queryString, queryParams).then((res) => res.rows);
 };
 exports.getAllProperties = getAllProperties;
 
